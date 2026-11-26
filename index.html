@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>대장 플레이</title>
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      font-family: system-ui, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      color: #18281f;
+      background: #edf3ee;
+      --green: #07523c;
+      --surface: #e3efe7;
+      --muted: #394a41;
+    }
+    body { margin: 0; }
+    body.detail-open { overflow: hidden; }
+    [hidden] { display: none !important; }
+    h1, h2, p, figure { margin: 0; }
+    h1, h2 { font-size: 1.375rem; line-height: 1.25; }
+    img { display: block; max-width: 100%; }
+    button, input { font: inherit; color: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    :focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+    .shell { width: 100%; max-width: 480px; margin-inline: auto; background: #f8fbf8; }
+    #store { min-height: 100vh; }
+    .masthead { padding: 20px 16px 12px; }
+    .brand { display: flex; align-items: center; gap: 12px; color: var(--green); }
+    .brand img { flex: none; }
+    .search {
+      display: block; width: 100%; min-height: 48px; margin-top: 16px;
+      padding: 10px 12px; border: 0; border-radius: 12px; background: var(--surface);
+    }
+    .search::placeholder { color: var(--muted); opacity: 1; }
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 16px; }
+    .action {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 48px; padding: 8px 12px; border: 0; border-radius: 12px;
+      background: var(--surface); font-weight: 750; text-align: center;
+    }
+    .primary, .action[aria-pressed="true"] { background: var(--green); color: white; }
+    .featured { margin-top: 24px; }
+    .featured h2 { padding-inline: 16px; }
+    .rail {
+      display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
+      padding: 10px 16px; scroll-padding-inline: 16px;
+    }
+    .card {
+      display: block; flex: 0 0 84%; min-width: 0; min-height: 48px;
+      scroll-snap-align: start; border-radius: 16px; overflow: hidden;
+      background: var(--surface); font-weight: 750;
+    }
+    .card img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; object-position: top; }
+    .rail { scrollbar-width: none; }
+    .rail::-webkit-scrollbar { display: none; }
+    .card span { display: block; padding: 10px 12px; }
+    .apps { display: grid; gap: 8px; list-style: none; margin: 12px 0 0; padding: 0 16px; }
+    .app-row {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px; align-items: center; background: white; border-radius: 16px; padding: 8px;
+    }
+    .app-entry {
+      display: flex; align-items: center; flex-wrap: wrap; gap: 10px; min-height: 64px;
+      border-radius: 12px;
+    }
+    .app-icon { border-radius: 15px; object-fit: cover; flex: none; }
+    .app-copy { flex: 1 1 100px; min-width: 0; }
+    .app-name { display: block; }
+    .byline, .hint, footer { font-size: .875rem; color: var(--muted); }
+    .byline { display: block; }
+    .empty { padding: 20px 16px; font-weight: 750; }
+    footer { display: grid; gap: 4px; padding: 24px 16px; text-align: center; }
+    #detail { position: fixed; inset: 0; overflow-y: auto; background: #edf3ee; }
+    .detail-shell { min-height: 100%; padding: 16px; }
+    .detail-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 20px; }
+    .detail-heading div { min-width: 0; }
+    .stats {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px; list-style: none; padding: 0; margin: 18px 0;
+    }
+    .stats li { padding: 9px 5px; border-radius: 12px; background: var(--surface); text-align: center; }
+    .install { display: flex; width: 100%; }
+    .hint { margin-top: 8px; }
+    .detail-shot { margin-top: 20px; }
+    .detail-shot img { width: 100%; border-radius: 16px; }
+    .detail-copy { display: grid; gap: 12px; margin-top: 16px; }
+    .joke, .update { padding: 12px; border-radius: 12px; background: var(--surface); }
+    .joke h2 { margin-bottom: 6px; }
+    .shell { overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <div id="store" class="shell">
+    <header class="masthead">
+      <div class="brand"><img src="icon.svg" alt="" width="48" height="48"><h1>대장 플레이</h1></div>
+      <input id="search" class="search" type="search" aria-label="앱 이름 또는 설명 검색" placeholder="앱 이름 또는 설명 검색" autocomplete="off">
+    </header>
+    <main>
+      <div class="filters" role="group" aria-label="앱 분류">
+        <button class="action" type="button" data-category="all" aria-pressed="true">전체</button>
+        <button class="action" type="button" data-category="game" aria-pressed="false">게임</button>
+        <button class="action" type="button" data-category="tool" aria-pressed="false">도구</button>
+      </div>
+      <section id="featured" class="featured" aria-labelledby="featured-title">
+        <h2 id="featured-title">대장 추천</h2>
+        <div id="rail" class="rail"></div>
+      </section>
+      <ul id="apps" class="apps" aria-label="앱 목록"></ul>
+      <p id="empty" class="empty" role="status" hidden>대장이 아직 안 만듦</p>
+    </main>
+    <footer><p>결제 없음 · 광고 없음 · 대장 잔소리만 있음</p><p>© 대장</p></footer>
+  </div>
+  <div id="detail" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
+    <main class="shell detail-shell">
+      <button id="back" class="action" type="button">뒤로</button>
+      <div class="detail-heading">
+        <img id="detail-icon" class="app-icon" alt="" width="88" height="88">
+        <div><h1 id="detail-title"></h1><p>개발자: 대장</p></div>
+      </div>
+      <ul class="stats" aria-label="앱 정보">
+        <li><strong>★5.0</strong><br>(리뷰 1개)</li>
+        <li><strong>다운로드</strong><br>대장 가족</li>
+        <li><strong>광고</strong><br>0개</li>
+      </ul>
+      <a id="install" class="action primary install">설치하러 가기</a>
+      <p class="hint">앱이 열리면 '홈 화면에 추가'를 누르면 설치돼요</p>
+      <figure class="detail-shot"><img id="detail-shot" alt=""></figure>
+      <div class="detail-copy">
+        <p id="detail-line"></p>
+        <section class="joke"><h2>대장 한마디</h2><p id="detail-joke"></p></section>
+        <p class="update">업데이트 내역: 대장이 마음에 안 들어서 또 고침</p>
+      </div>
+    </main>
+  </div>
+  <script src="apps.js"></script>
+  <script>
+    const apps = window.DJ_APPS;
+    const byId = id => document.getElementById(id);
+    const store = byId('store');
+    const detail = byId('detail');
+    const search = byId('search');
+    const rail = byId('rail');
+    const list = byId('apps');
+    const tabs = document.querySelectorAll('[data-category]');
+    let category = 'all';
+    let opener;
+
+    function make(tag, className, content = '') {
+      const element = document.createElement(tag);
+      element.className = className;
+      element.textContent = content;
+      return element;
+    }
+
+    function detailLink(app, className) {
+      const link = make('a', className);
+      link.href = '#' + app.id;
+      link.addEventListener('click', event => {
+        if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        opener = link;
+        history.pushState({ daejangDetail: app.id }, '', link.href);
+        syncDetail();
+      });
+      return link;
+    }
+
+    function renderApps() {
+      const query = search.value.trim().normalize('NFC').toLowerCase();
+      const visible = apps.filter(app => (category === 'all' || app.cat === category) &&
+        (app.name + ' ' + app.line).normalize('NFC').toLowerCase().includes(query));
+      rail.replaceChildren();
+      rail.scrollLeft = 0;
+      list.replaceChildren();
+      byId('featured').hidden = visible.length === 0;
+      byId('empty').hidden = visible.length !== 0;
+
+      for (const app of visible) {
+        const card = detailLink(app, 'card');
+        const shot = make('img', '');
+        shot.src = app.shot;
+        shot.alt = '';
+        shot.style.backgroundColor = app.color;
+        card.append(shot, make('span', '', app.name));
+        rail.append(card);
+
+        const row = make('li', 'app-row');
+        const entry = detailLink(app, 'app-entry');
+        const icon = make('img', 'app-icon');
+        icon.src = app.icon;
+        icon.alt = '';
+        icon.width = icon.height = 64;
+        const copy = make('span', 'app-copy');
+        copy.append(make('strong', 'app-name', app.name),
+          make('span', 'byline', app.cat === 'game' ? '게임' : '도구'),
+          make('span', 'byline', '★5.0 · 리뷰 1개(대장)'));
+        entry.append(icon, copy);
+        const open = make('a', 'action primary', '열기');
+        open.href = app.url;
+        open.setAttribute('aria-label', app.name + ' 열기');
+        row.append(entry, open);
+        list.append(row);
+      }
+    }
+
+    function syncDetail() {
+      const app = apps.find(item => '#' + item.id === location.hash);
+      if (app) {
+        byId('detail-title').textContent = app.name;
+        byId('detail-icon').src = app.icon;
+        byId('detail-shot').src = app.shot;
+        byId('detail-shot').alt = app.name + ' 화면';
+        byId('detail-line').textContent = app.line;
+        byId('detail-joke').textContent = app.joke;
+        byId('install').href = app.url;
+        detail.hidden = false;
+        store.inert = true;
+        document.body.classList.add('detail-open');
+        detail.scrollTop = 0;
+        byId('back').focus({ preventScroll: true });
+      } else if (!detail.hidden) {
+        detail.hidden = true;
+        store.inert = false;
+        document.body.classList.remove('detail-open');
+        (opener?.isConnected ? opener : search).focus({ preventScroll: true });
+      }
+    }
+
+    function goBack() {
+      if (history.state?.daejangDetail === location.hash.slice(1)) {
+        history.back();
+      } else {
+        history.replaceState(null, '', location.pathname + location.search);
+        syncDetail();
+      }
+    }
+
+    search.addEventListener('input', renderApps);
+    for (const tab of tabs) {
+      tab.addEventListener('click', () => {
+        category = tab.dataset.category;
+        for (const option of tabs) option.setAttribute('aria-pressed', option === tab);
+        renderApps();
+      });
+    }
+    byId('back').addEventListener('click', goBack);
+    detail.addEventListener('keydown', event => {
+      if (event.key === 'Escape') goBack();
+      if (event.key === 'Tab') {
+        const first = byId('back');
+        const last = byId('install');
+        if ((event.shiftKey && document.activeElement === first) ||
+            (!event.shiftKey && document.activeElement === last)) {
+          event.preventDefault();
+          (event.shiftKey ? last : first).focus();
+        }
+      }
+    });
+    window.addEventListener('hashchange', syncDetail);
+    renderApps();
+    syncDetail();
+  </script>
+</body>
+</html>
