@@ -33,6 +33,10 @@
     .masthead { padding: 20px 16px 12px; }
     .brand { display: flex; align-items: center; gap: 12px; color: var(--green); }
     .brand img { flex: none; }
+    .brand .site-install {
+      flex: none; margin-inline-start: auto; min-height: 40px;
+      font-size: .875rem; white-space: nowrap;
+    }
     .search {
       display: block; width: 100%; min-height: 48px; margin-top: 16px;
       padding: 10px 12px; border: 0; border-radius: 12px; background: var(--surface);
@@ -102,12 +106,23 @@
     .joke, .update { padding: 12px; border-radius: 12px; background: var(--surface); }
     .joke h2 { margin-bottom: 6px; }
     .shell { overflow-wrap: anywhere; }
+    .install-guide {
+      width: min(400px, calc(100% - 32px)); padding: 20px;
+      color: inherit; border: 0; border-radius: 16px; background: #fff8fc;
+    }
+    .install-guide::backdrop { background: rgb(42 15 38 / 55%); }
+    .install-guide ul { display: grid; gap: 8px; padding-inline-start: 22px; }
+    .install-guide button { font-size: .875rem; }
   </style>
 </head>
 <body>
   <div id="store" class="shell">
     <header class="masthead">
-      <div class="brand"><img src="logo.png" alt="" width="48" height="48"><h1>대장 플레이</h1></div>
+      <div class="brand">
+        <img src="logo.png" alt="" width="48" height="48">
+        <h1>대장 플레이</h1>
+        <button id="site-install" class="action primary site-install" type="button" hidden>앱 설치</button>
+      </div>
       <input id="search" class="search" type="search" aria-label="앱 이름 또는 설명 검색" placeholder="앱 이름 또는 설명 검색" autocomplete="off">
     </header>
     <main>
@@ -150,6 +165,60 @@
       </div>
     </main>
   </div>
+  <dialog id="install-guide" class="install-guide" aria-labelledby="install-guide-title">
+    <h2 id="install-guide-title">앱 설치 방법</h2>
+    <ul>
+      <li><strong>크롬</strong> · 주소창 오른쪽 설치 아이콘 또는 ⋮ 메뉴 → 전송, 저장 및 공유 → 페이지를 앱으로 설치</li>
+      <li><strong>엣지</strong> · … 메뉴 → 앱 → 이 사이트를 앱으로 설치</li>
+      <li><strong>아이폰</strong> · 사파리 공유 버튼 → 홈 화면에 추가</li>
+      <li><strong>갤럭시</strong> · ⋮ 메뉴 → 홈 화면에 추가 / 앱 설치</li>
+    </ul>
+    <form method="dialog">
+      <button class="action" type="submit" autofocus>닫기</button>
+    </form>
+  </dialog>
+  <script>
+    const siteInstallButton = document.getElementById('site-install');
+    const installGuide = document.getElementById('install-guide');
+    const standaloneMode = window.matchMedia('(display-mode: standalone)');
+    let installPrompt;
+    let siteInstalled = false;
+
+    function updateSiteInstallButton() {
+      siteInstallButton.hidden = siteInstalled || standaloneMode.matches || !!navigator.standalone;
+      if (siteInstallButton.hidden && installGuide.open) installGuide.close();
+    }
+
+    window.addEventListener('beforeinstallprompt', event => {
+      event.preventDefault();
+      installPrompt = event;
+    });
+    siteInstallButton.addEventListener('click', async () => {
+      if (siteInstallButton.disabled || siteInstallButton.hidden) return;
+      if (!installPrompt) {
+        installGuide.showModal();
+        return;
+      }
+
+      const promptEvent = installPrompt;
+      installPrompt = undefined;
+      siteInstallButton.disabled = true;
+      try {
+        await promptEvent.prompt();
+      } catch {
+        if (!siteInstallButton.hidden) installGuide.showModal();
+      } finally {
+        siteInstallButton.disabled = false;
+      }
+    });
+    window.addEventListener('appinstalled', () => {
+      siteInstalled = true;
+      installPrompt = undefined;
+      updateSiteInstallButton();
+    });
+    standaloneMode.addEventListener('change', updateSiteInstallButton);
+    updateSiteInstallButton();
+  </script>
   <script src="apps.js"></script>
   <script>
     const apps = window.DJ_APPS;
