@@ -17,7 +17,7 @@ window.DJ_APPS = [
     line: "사진 콜라주와 카드를 뚝딱 만들어요.",
     joke: "손재주 없어도 뚝딱. 진짜임" },
   { id: "shalom", name: "샬롬견적서", cat: "tool", url: "https://djsk-bible.github.io/shalom-quote/",
-    icon: "icons/shalom.png", shots: ["shots/shalom-1.jpg", "shots/shalom-2.jpg"], color: "#ffffff",
+    icon: "icons/shalom.png", shots: ["shots/shalom-1.jpg", "shots/shalom-2.jpg", "shots/shalom-3.jpg"], color: "#ffffff",
     line: "샬롬광고기획 견적서를 폰에서 바로 써요.",
     joke: "견적은 정확하게, 말은 친절하게" }
 ];
