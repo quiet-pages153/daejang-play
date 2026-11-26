@@ -76,6 +76,8 @@
     .empty { padding: 20px 16px; font-weight: 750; }
     footer { display: grid; gap: 4px; padding: 24px 16px; text-align: center; }
     #detail { position: fixed; inset: 0; overflow-y: auto; background: #f7eaf3; }
+    #detail, .detail-shots { scrollbar-width: none; }
+    #detail::-webkit-scrollbar, .detail-shots::-webkit-scrollbar { display: none; }
     .detail-shell { min-height: 100%; padding: 16px; }
     .detail-heading { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 20px; }
     .detail-heading div { min-width: 0; }
@@ -87,7 +89,14 @@
     .install { display: flex; width: 100%; }
     .hint { margin-top: 8px; }
     .detail-shot { margin-top: 20px; }
-    .detail-shot img { width: 100%; border-radius: 16px; }
+    .detail-shots {
+      display: flex; gap: 10px; margin-top: 10px; max-width: 100%;
+      overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory;
+    }
+    .detail-shots img {
+      flex: 0 0 128px; width: 128px; height: auto; aspect-ratio: 390 / 844;
+      border-radius: 12px; scroll-snap-align: start;
+    }
     .detail-copy { display: grid; gap: 12px; margin-top: 16px; }
     .joke, .update { padding: 12px; border-radius: 12px; background: var(--surface); }
     .joke h2 { margin-bottom: 6px; }
@@ -129,7 +138,10 @@
       </ul>
       <a id="install" class="action primary install">설치하러 가기</a>
       <p class="hint">앱이 열리면 '홈 화면에 추가'를 누르면 설치돼요</p>
-      <figure class="detail-shot"><img id="detail-shot" alt=""></figure>
+      <section class="detail-shot" aria-labelledby="preview-title">
+        <h2 id="preview-title">미리 보기</h2>
+        <div id="detail-shots" class="detail-shots"></div>
+      </section>
       <div class="detail-copy">
         <p id="detail-line"></p>
         <section class="joke"><h2>대장 한마디</h2><p id="detail-joke"></p></section>
@@ -143,6 +155,7 @@
     const byId = id => document.getElementById(id);
     const store = byId('store');
     const detail = byId('detail');
+    const detailShots = byId('detail-shots');
     const search = byId('search');
     const rail = byId('rail');
     const list = byId('apps');
@@ -155,6 +168,13 @@
       element.className = className;
       element.textContent = content;
       return element;
+    }
+
+    function makeShot(src, alt) {
+      const image = make('img', '');
+      image.alt = alt;
+      image.src = src;
+      return image;
     }
 
     function detailLink(app, className) {
@@ -182,9 +202,7 @@
 
       for (const app of visible) {
         const card = detailLink(app, 'card');
-        const shot = make('img', '');
-        shot.src = app.shot;
-        shot.alt = '';
+        const shot = makeShot(app.shots[0], '');
         shot.style.backgroundColor = app.color;
         card.append(shot, make('span', '', app.name));
         rail.append(card);
@@ -213,8 +231,9 @@
       if (app) {
         byId('detail-title').textContent = app.name;
         byId('detail-icon').src = app.icon;
-        byId('detail-shot').src = app.shot;
-        byId('detail-shot').alt = app.name + ' 화면';
+        detailShots.replaceChildren(...app.shots.map((src, index) =>
+          makeShot(src, app.name + ' 화면 ' + (index + 1))
+        ));
         byId('detail-line').textContent = app.line;
         byId('detail-joke').textContent = app.joke;
         byId('install').href = app.url;
@@ -222,6 +241,7 @@
         store.inert = true;
         document.body.classList.add('detail-open');
         detail.scrollTop = 0;
+        detailShots.scrollLeft = 0;
         byId('back').focus({ preventScroll: true });
       } else if (!detail.hidden) {
         detail.hidden = true;
