@@ -1,8 +1,14 @@
 // 대장 플레이 전용 서비스 워커. 범위는 /daejang-play/ 안쪽만 (다른 앱에 영향 없음).
 // 인터넷 먼저, 끊기면 마지막으로 받은 화면을 보여 준다. 캐시 이름은 daejang-play- 로만 시작.
-const CACHE = 'daejang-play-v1';
+const CACHE = 'daejang-play-v2';
 
-self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('install', event => {
+  event.waitUntil((async () => {
+    const c = await caches.open(CACHE);
+    await c.addAll(['./', 'apps.js', 'logo.png', 'favicon.png', 'manifest.webmanifest']);
+    await self.skipWaiting();
+  })());
+});
 
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
