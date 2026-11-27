@@ -10,7 +10,7 @@ window.DJ_APPS = [
     joke: "구조선은 아직 안 옴. 대장이 업데이트 중" },
   { id: "carrot", name: "캐롯계산기", cat: "tool", url: "https://quiet-pages153.github.io/carrot-calculator/",
     icon: "icons/carrot.png", shots: ["shots/carrot-1.jpg", "shots/carrot-2.jpg", "shots/carrot-3.jpg"], color: "#f7d6ac",
-    line: "대출, 할인, 생활, 부동산 계산을 한 곳에서.",
+    line: "대출, 할인, 생활, 부동산 계산을 한 곳에서. 계산서는 이미지로 저장·공유하고 A4로 인쇄해요.",
     joke: "취득세 반올림까지 대장이 손으로 검산함" },
   { id: "ttukttak", name: "뚝딱카드", cat: "tool", url: "https://quiet-pages153.github.io/ttukttak-card/",
     icon: "icons/ttukttak.png", shots: ["shots/ttukttak-1.jpg", "shots/ttukttak-2.jpg", "shots/ttukttak-3.jpg"], color: "#FFF6F0",
